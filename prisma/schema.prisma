@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // Mudamos para MySQL
+}
+
+// --- TABELAS DO SISTEMA ---
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senha     String   // Depois vamos usar bcrypt para encriptar
+  perfil    String   // Admin, Gerente, Farmaceutico, Caixa
+  createdAt DateTime @default(now())
+}
+
+model Produto {
+  id            Int      @id @default(autoincrement())
+  nome          String   @unique
+  fabricante    String
+  medida        String
+  categoria     String   // Anestésico, Analgésico, etc
+  estoqueMinimo Int      @default(10)
+  
+  // Relacionamento: 1 Produto tem Vários Lotes
+  lotes         Lote[]   
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Lote {
+  id         Int      @id @default(autoincrement())
+  numeroLote String
+  validade   DateTime
+  quantidade Int      @default(0)
+  
+  // Chave estrangeira ligando ao Produto
+  produtoId  Int
+  produto    Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+}
+
+// Tabelas auxiliares
+model Ubs {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  rua       String
+  bairro    String
+  cep       String
+  medicos   Medico[] // 1 UBS tem vários médicos
+}
+
+model Medico {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  crm       String   @unique
+  ubsId     Int
+  ubs       Ubs      @relation(fields: [ubsId], references: [id])
+}
