@@ -34,8 +34,8 @@ export async function POST(request: Request) {
             }
           }
         },
-      include: {
-          lotes: true 
+        include: {
+          lotes: true
         }
       });
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     // =========================================================
     // CENÁRIO B: PRODUTO EXISTE (Vamos analisar os Lotes)
     // =========================================================
-    
+
     // Normalizamos a data de validade que chegou (ex: '2025-10-15') para comparar
     const dataValidadeNova = new Date(lote.validade).toISOString().split('T')[0];
 
@@ -94,5 +94,19 @@ export async function POST(request: Request) {
       { error: 'Erro interno ao processar cadastro de medicamento.' },
       { status: 500 }
     );
+  }
+}
+// Adicione isso no final do arquivo src/app/api/produtos/route.ts
+
+export async function GET() {
+  try {
+    const produtos = await prisma.produto.findMany({
+      orderBy: { nome: 'asc' },
+      include: { lotes: true }
+    });
+    return NextResponse.json(produtos, { status: 200 });
+  } catch (error) {
+    console.error("Erro ao buscar produtos:", error);
+    return NextResponse.json({ error: 'Erro ao buscar produtos' }, { status: 500 });
   }
 }

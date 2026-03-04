@@ -12,11 +12,10 @@ model Usuario {
   id        Int      @id @default(autoincrement())
   nome      String
   email     String   @unique
-  senha     String   // Depois vamos usar bcrypt para encriptar
-  perfil    String   // Admin, Gerente, Farmaceutico, Caixa
-  createdAt DateTime @default(now())
+  senha     String   // Guardaremos a senha criptografada aqui
+  role      String   @default("ATENDENTE") // Pode ser: ADMIN, FARMACEUTICO ou ATENDENTE
+  criadoEm  DateTime @default(now())
 }
-
 model Produto {
   id            Int      @id @default(autoincrement())
   nome          String   @unique
@@ -28,6 +27,8 @@ model Produto {
   // Relacionamento: 1 Produto tem Vários Lotes
   lotes         Lote[]   
   
+  movimentacoes Movimentacao[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -59,4 +60,15 @@ model Medico {
   crm       String   @unique
   ubsId     Int
   ubs       Ubs      @relation(fields: [ubsId], references: [id])
+}
+
+model Movimentacao {
+  id          Int      @id @default(autoincrement())
+  tipo        String   // Vai gravar se foi "ENTRADA" ou "SAIDA"
+  quantidade  Int
+  data        DateTime @default(now())
+  
+  // Relacionamento com o Produto
+  produtoId   Int
+  produto     Produto  @relation(fields: [produtoId], references: [id])
 }

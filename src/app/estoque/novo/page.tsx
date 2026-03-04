@@ -5,6 +5,16 @@ import { Card } from "@/components/ui/Card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Pill, Building2, Package, Tag, AlertTriangle, Hash, Calendar, Layers, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
+// 👇 AQUI ESTÁ A CORREÇÃO! Colocamos o InputGroup FORA da função principal 👇
+const InputGroup = ({ label, icon: Icon, children }: any) => (
+  <div className="flex flex-col gap-1.5">
+    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+      {Icon && <Icon className="w-4 h-4 text-slate-400" />} {label}
+    </label>
+    {children}
+  </div>
+);
+
 export default function CadastroMedicamento() {
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState({ tipo: '', texto: '' });
@@ -34,6 +44,8 @@ export default function CadastroMedicamento() {
       const data = await response.json();
       if (response.ok) {
         setMensagem({ tipo: 'sucesso', texto: data.message });
+        // Opcional: Limpar formulário após salvar
+        // setFormData({nome: '', fabricante: '', medida: '', categoria: 'Analgésico', estoqueMinimo: 10, lote: { numeroLote: '', validade: '', quantidade: 0 }});
       } else {
         setMensagem({ tipo: 'erro', texto: data.error || 'Erro ao salvar.' });
       }
@@ -44,23 +56,11 @@ export default function CadastroMedicamento() {
     }
   };
 
-  // Componente auxiliar para Input com Ícone
-  const InputGroup = ({ label, icon: Icon, children }: any) => (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-        {Icon && <Icon className="w-4 h-4 text-slate-400" />} {label}
-      </label>
-      {children}
-    </div>
-  );
-
-  // Estilo padrão dos inputs
   const inputStyle = "w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all dark:border-slate-700 dark:bg-slate-900/50 dark:text-white dark:focus:bg-slate-800";
 
   return (
     <div className="min-h-screen p-6 md:p-8 lg:p-12 max-w-5xl mx-auto">
       
-      {/* Cabeçalho */}
       <header className="mb-10 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
@@ -73,10 +73,9 @@ export default function CadastroMedicamento() {
             Cadastre um novo produto na base ou adicione lotes de entrada.
           </p>
         </div>
-        <ThemeToggle /> {/* O Botão de Dark Mode ali no canto! */}
+        <ThemeToggle />
       </header>
 
-      {/* Alertas Premium */}
       {mensagem.texto && (
         <div className={`mb-8 p-4 rounded-xl flex items-center gap-3 font-medium text-sm animate-in fade-in slide-in-from-top-4 ${
           mensagem.tipo === 'sucesso' 
@@ -90,7 +89,6 @@ export default function CadastroMedicamento() {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         
-        {/* Card 1: Produto */}
         <Card className="p-8">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Identificação do Produto</h2>
@@ -123,7 +121,6 @@ export default function CadastroMedicamento() {
           </div>
         </Card>
 
-        {/* Card 2: Lote */}
         <Card className="p-8 border-l-4 border-l-blue-500 dark:border-l-blue-500">
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Dados do Lote</h2>
@@ -143,10 +140,9 @@ export default function CadastroMedicamento() {
           </div>
         </Card>
 
-        {/* Botões de Ação */}
         <div className="flex items-center justify-end gap-4 pt-4">
-          <button type="button" className="px-6 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors dark:text-slate-300 dark:hover:bg-slate-800">
-            Cancelar
+          <button type="button" onClick={() => window.history.back()} className="px-6 py-3 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition-colors dark:text-slate-300 dark:hover:bg-slate-800">
+            Voltar
           </button>
           <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:disabled:bg-blue-800 text-white px-8 py-3 rounded-xl font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 active:scale-95 flex items-center gap-2">
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
