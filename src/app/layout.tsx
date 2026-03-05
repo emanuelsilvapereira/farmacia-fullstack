@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -18,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning className="antialiased">
-      <body className={`${inter.className} bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-300 ease-in-out`}>
+      <body className={`${inter.className} bg-blue-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 antialiased`}>
         <ThemeProvider>
           <Cabecalho /> {/* Cabecalho perfeitamente posicionado aqui */}
           {children}

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -9,6 +10,12 @@ export async function GET() {
     // O createMany insere vários registros de uma vez e ignora se o e-mail já existir
     await (prisma as any).usuario.createMany({
       data: [
+        {
+          nome: 'Administrador',
+          email: 'admin@sistema.com',
+          senha: valorTratado, // Use o nome da variável de senha que você já tem aí
+          role: 'ADMIN'
+        },
         {
           nome: 'Gerente Silva',
           email: 'gerente@sistema.com',
@@ -25,9 +32,9 @@ export async function GET() {
       skipDuplicates: true
     });
 
-    return NextResponse.json({ 
-      sucesso: true, 
-      mensagem: 'Contas da equipe geradas com sucesso!' 
+    return NextResponse.json({
+      sucesso: true,
+      mensagem: 'Contas da equipe geradas com sucesso!'
     });
 
   } catch (error: any) {

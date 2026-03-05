@@ -4,16 +4,15 @@ import prisma from '@/lib/prisma';
 import { Card } from "@/components/ui/Card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Package, Plus, AlertTriangle, Pill } from "lucide-react";
-import { FiltroBusca } from "@/components/FiltroBusca"; // 👈 Nosso novo componente importado
+import { FiltroBusca } from "@/components/FiltroBusca"; 
+import { BotaoDeletar } from "@/components/BotaoDeletar";
 
 export default async function ListaEstoque(props: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  // 1. Resolvemos a Promise da URL (Padrão Next.js 15)
   const searchParams = await props.searchParams;
   const termoDeBusca = searchParams?.q || "";
 
-  // 2. Buscando direto do banco com o filtro aplicado
   const produtos = await prisma.produto.findMany({
     where: {
       OR: [
@@ -22,10 +21,10 @@ export default async function ListaEstoque(props: {
       ]
     },
     include: {
-      lotes: true, // Traz os lotes amarrados a cada produto
+      lotes: true,
     },
     orderBy: {
-      nome: 'asc', // Ordem alfabética
+      nome: 'asc',
     }
   });
 
@@ -49,7 +48,6 @@ export default async function ListaEstoque(props: {
         </div>
         
         <div className="flex items-center gap-3">
-          <ThemeToggle />
           <Link 
             href="/estoque/novo"
             className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 active:scale-95 flex items-center gap-2"
@@ -60,7 +58,7 @@ export default async function ListaEstoque(props: {
         </div>
       </header>
 
-      {/* Barra de Pesquisa e Filtros (Agora Funcional!) */}
+      {/* Barra de Pesquisa e Filtros */}
       <Card className="p-4 mb-6 flex items-center gap-3">
         <FiltroBusca />
       </Card>
@@ -76,14 +74,16 @@ export default async function ListaEstoque(props: {
               <th className="py-4 px-6 font-medium text-sm text-slate-500 dark:text-slate-400">Lotes Ativos</th>
               <th className="py-4 px-6 font-medium text-sm text-slate-500 dark:text-slate-400">Estoque Total</th>
               <th className="py-4 px-6 font-medium text-sm text-slate-500 dark:text-slate-400">Status</th>
+              {/* 👇 1. Criamos a coluna de Ações aqui 👇 */}
+              <th className="py-4 px-6 font-medium text-sm text-slate-500 dark:text-slate-400 text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
             
-            {/* Se a busca não retornar nada ou não houver produtos */}
             {produtos.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-slate-500 dark:text-slate-400">
+                {/* 👇 2. Mudamos para colSpan=7 para ocupar a tabela inteira 👇 */}
+                <td colSpan={7} className="py-12 text-center text-slate-500 dark:text-slate-400">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Pill className="w-8 h-8 opacity-20" />
                     <p>Nenhum medicamento encontrado.</p>
@@ -92,15 +92,12 @@ export default async function ListaEstoque(props: {
               </tr>
             )}
 
-            {/* Loop renderizando os produtos do banco */}
             {produtos.map((produto) => {
-              // Calculando o total de estoque somando todos os lotes
               const totalEstoque = produto.lotes.reduce((acc: any, lote: any) => acc + lote.quantidade, 0);
-              // Como não temos a tipagem exata aqui, usei o || 0 para evitar erros no estoque mínimo
               const isEstoqueBaixo = totalEstoque <= (produto.estoqueMinimo || 0);
 
               return (
-                <tr key={produto.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer">
+                <tr key={produto.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                   <td className="py-4 px-6">
                     <div className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
                       {produto.nome}
@@ -138,6 +135,14 @@ export default async function ListaEstoque(props: {
                       </div>
                     )}
                   </td>
+                  
+                  {/* 👇 3. O nosso botãozinho entra aqui na última coluna! 👇 */}
+                  <td className="py-4 px-6 text-right">
+                    <div className="flex justify-end">
+                      <BotaoDeletar id={produto.id} nomeProduto={produto.nome} />
+                    </div>
+                  </td>
+
                 </tr>
               );
             })}

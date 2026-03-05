@@ -1,18 +1,19 @@
 import React from 'react';
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
-import { getServerSession } from "next-auth"; // 👈 Importado
-import { authOptions } from "@/lib/auth"; // 👈 Importado
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { 
-  LayoutDashboard, 
-  Package, 
-  AlertTriangle, 
-  ArrowRightLeft, 
-  PlusCircle, 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { CardTotalItens } from "@/components/CardTotalItens";
+import { RefreshEvents } from "@/components/RefreshEvents";
+
+import {
+  LayoutDashboard,
+  Package,
+  AlertTriangle,
+  PlusCircle,
   ArrowRight,
   TrendingDown,
-  Users // 👈 Ícone para a equipe
+  Users
 } from "lucide-react";
 
 export default async function DashboardHome() {
@@ -27,7 +28,7 @@ export default async function DashboardHome() {
 
   // 2. Calculando as métricas do Dashboard
   const totalProdutosCadastrados = produtos.length;
-  
+
   const totalItensNoEstoque = produtos.reduce((accTotal, produto) => {
     const somaLotes = produto.lotes.reduce((accLote, lote) => accLote + lote.quantidade, 0);
     return accTotal + somaLotes;
@@ -38,11 +39,31 @@ export default async function DashboardHome() {
     return estoqueProduto <= (produto.estoqueMinimo || 0);
   });
 
+  const produtosComEstoque = produtos.map(p => {
+    const total = p.lotes.reduce((acc, lote) => acc + lote.quantidade, 0);
+    return { nome: p.nome, total };
+  });
+
+  // 3. Preparando os dados para o gráfico (Top 6)
+  const top6Produtos = produtosComEstoque
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6);
+
+  const maiorValor = top6Produtos.length > 0 ? top6Produtos[0].total : 1;
+
+  const dadosParaGrafico = top6Produtos.map(p => ({
+    label: p.nome.substring(0, 12),
+    valor: p.total,
+    percentual: Math.round((p.total / maiorValor) * 100)
+  }));
+
   const cardStyle = "bg-white dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm flex flex-col justify-between";
 
   return (
     <div className="min-h-screen p-6 md:p-8 lg:p-12 max-w-7xl mx-auto">
-      
+      {/* 👇 Componente invisível que atualiza os dados quando você volta para esta aba */}
+      <RefreshEvents />
+
       {/* Cabeçalho */}
       <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -58,12 +79,12 @@ export default async function DashboardHome() {
             Resumo do seu controle de estoque e acessos rápidos.
           </p>
         </div>
-        <ThemeToggle />
       </header>
 
       {/* Cards de Métricas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        
+
+        {/* Card 1: Produtos Cadastrados */}
         <div className={cardStyle}>
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
@@ -76,29 +97,17 @@ export default async function DashboardHome() {
           </div>
         </div>
 
-        <div className={cardStyle}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-              <ArrowRightLeft className="w-6 h-6" />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{totalItensNoEstoque}</h3>
-            <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Total de Itens Físicos</p>
-          </div>
-        </div>
+        {/* Card 2: Total de Itens Físicos (Com Gráfico Animado ao clicar) */}
+        <CardTotalItens total={totalItensNoEstoque} dadosGrafico={dadosParaGrafico} />
 
+        {/* Card 3: Alertas de Estoque */}
         <div className={`p-6 rounded-2xl border shadow-sm flex flex-col justify-between ${
-          produtosAlerta.length > 0 
-            ? 'bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/20' 
+          produtosAlerta.length > 0
+            ? 'bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/20'
             : 'bg-white border-slate-200 dark:bg-slate-800/50 dark:border-slate-700/50'
-        }`}>
+          }`}>
           <div className="flex items-center justify-between mb-4">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              produtosAlerta.length > 0 
-                ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400' 
-                : 'bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
-            }`}>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">
               <AlertTriangle className="w-6 h-6" />
             </div>
           </div>
@@ -118,7 +127,7 @@ export default async function DashboardHome() {
       <div>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">Ações Rápidas</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          
+
           <Link href="/estoque" className="group p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm hover:shadow-md flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 dark:group-hover:bg-blue-500/10 dark:group-hover:text-blue-400 transition-colors">

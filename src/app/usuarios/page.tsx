@@ -50,7 +50,6 @@ export default async function UsuariosPage() {
         </div>
 
         {/* 👇 O botão de Dark Mode agora aparece aqui também! */}
-        <ThemeToggle /> 
       </header>
 
       <Card className="overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50">

@@ -1,10 +1,12 @@
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { BotaoSair } from "./BotaoSair";
+import { BotaoVoltar } from "@/components/BotaoVoltar";
 
 export async function Cabecalho() {
   // 👈 Agora passamos a regra para o NextAuth saber que precisa buscar o 'role'
-  const session: any = await getServerSession(authOptions); 
+  const session: any = await getServerSession(authOptions);
 
   if (!session?.user) return null;
 
@@ -23,8 +25,11 @@ export async function Cabecalho() {
           </p>
         </div>
       </div>
-      
-      <BotaoSair />
+      <div className="flex items-center gap-4">
+        <BotaoVoltar />
+        <ThemeToggle />
+        <BotaoSair />
+      </div>
     </header>
   );
 }

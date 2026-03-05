@@ -72,3 +72,21 @@ model Movimentacao {
   produtoId   Int
   produto     Produto  @relation(fields: [produtoId], references: [id])
 }
+model Ubs {
+  id        Int      @id @default(autoincrement())
+  nome      String   @unique
+  bairro    String
+  cep       String
+  rua       String
+  medicos   Medico[] // Uma UBS tem vários médicos
+  createdAt DateTime @default(now())
+}
+
+model Medico {
+  id            Int      @id @default(autoincrement())
+  nome          String
+  crm           String   @unique
+  ubs           Ubs      @relation(fields: [ubsId], references: [id])
+  ubsId         Int
+  createdAt     DateTime @default(now())
+}
