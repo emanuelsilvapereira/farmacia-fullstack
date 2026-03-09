@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
@@ -12,14 +13,17 @@ export async function POST(request: Request) {
         rua: body.rua,
       },
     });
-    return NextResponse.json({ message: "UBS cadastrada!", ubs: novaUbs });
+    return NextResponse.json({ message: "UBS cadastrada com sucesso!" });
   } catch (error) {
-    return NextResponse.json({ error: "Erro ao cadastrar UBS" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao cadastrar UBS." }, { status: 500 });
   }
 }
 
-// Aproveite para criar o GET para listar no select de médicos
 export async function GET() {
-  const ubs = await prisma.ubs.findMany({ orderBy: { nome: 'asc' } });
-  return NextResponse.json(ubs);
+  try {
+    const ubs = await prisma.ubs.findMany({ orderBy: { nome: 'asc' } });
+    return NextResponse.json(ubs);
+  } catch (error) {
+    return NextResponse.json({ error: "Erro ao buscar UBS" }, { status: 500 });
+  }
 }

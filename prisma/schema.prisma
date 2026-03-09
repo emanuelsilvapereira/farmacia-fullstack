@@ -9,28 +9,29 @@ datasource db {
 // --- TABELAS DO SISTEMA ---
 
 model Usuario {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  email     String   @unique
-  senha     String   // Guardaremos a senha criptografada aqui
-  role      String   @default("ATENDENTE") // Pode ser: ADMIN, FARMACEUTICO ou ATENDENTE
-  criadoEm  DateTime @default(now())
+  id       Int      @id @default(autoincrement())
+  nome     String
+  email    String   @unique
+  senha    String // Guardaremos a senha criptografada aqui
+  role     String   @default("ATENDENTE") // Pode ser: ADMIN, FARMACEUTICO ou ATENDENTE
+  criadoEm DateTime @default(now())
 }
+
 model Produto {
-  id            Int      @id @default(autoincrement())
-  nome          String   @unique
+  id            Int    @id @default(autoincrement())
+  nome          String @unique
   fabricante    String
   medida        String
-  categoria     String   // Anestésico, Analgésico, etc
-  estoqueMinimo Int      @default(10)
-  
+  categoria     String // Anestésico, Analgésico, etc
+  estoqueMinimo Int    @default(10)
+
   // Relacionamento: 1 Produto tem Vários Lotes
-  lotes         Lote[]   
-  
+  lotes Lote[]
+
   movimentacoes Movimentacao[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Lote {
@@ -38,55 +39,44 @@ model Lote {
   numeroLote String
   validade   DateTime
   quantidade Int      @default(0)
-  
+
   // Chave estrangeira ligando ao Produto
-  produtoId  Int
-  produto    Produto  @relation(fields: [produtoId], references: [id], onDelete: Cascade)
-}
-
-// Tabelas auxiliares
-model Ubs {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  rua       String
-  bairro    String
-  cep       String
-  medicos   Medico[] // 1 UBS tem vários médicos
-}
-
-model Medico {
-  id        Int      @id @default(autoincrement())
-  nome      String
-  crm       String   @unique
-  ubsId     Int
-  ubs       Ubs      @relation(fields: [ubsId], references: [id])
+  produtoId Int
+  produto   Produto @relation(fields: [produtoId], references: [id], onDelete: Cascade)
 }
 
 model Movimentacao {
-  id          Int      @id @default(autoincrement())
-  tipo        String   // Vai gravar se foi "ENTRADA" ou "SAIDA"
-  quantidade  Int
-  data        DateTime @default(now())
-  
+  id         Int      @id @default(autoincrement())
+  tipo       String // Vai gravar se foi "ENTRADA" ou "SAIDA"
+  quantidade Int
+  data       DateTime @default(now())
+
   // Relacionamento com o Produto
-  produtoId   Int
-  produto     Produto  @relation(fields: [produtoId], references: [id])
+  produtoId Int
+  produto   Produto @relation(fields: [produtoId], references: [id])
+  medicoId  Int? // <-- Tem que ter o ?
+  medico    Medico? @relation(fields: [medicoId], references: [id]) // <-- Tem que ter o ?
+  ubsId     Int? // <-- Tem que ter o ?
+  ubs       Ubs?    @relation(fields: [ubsId], references: [id]) // <-- Tem que ter o ?
 }
+
 model Ubs {
-  id        Int      @id @default(autoincrement())
-  nome      String   @unique
-  bairro    String
-  cep       String
-  rua       String
-  medicos   Medico[] // Uma UBS tem vários médicos
-  createdAt DateTime @default(now())
+  id            Int            @id @default(autoincrement())
+  nome          String         @unique
+  bairro        String
+  cep           String
+  rua           String
+  medicos       Medico[] // Uma UBS tem vários médicos
+  createdAt     DateTime       @default(now())
+  movimentacoes Movimentacao[]
 }
 
 model Medico {
-  id            Int      @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   nome          String
-  crm           String   @unique
-  ubs           Ubs      @relation(fields: [ubsId], references: [id])
+  crm           String         @unique
+  ubs           Ubs            @relation(fields: [ubsId], references: [id])
   ubsId         Int
-  createdAt     DateTime @default(now())
+  createdAt     DateTime       @default(now())
+  movimentacoes Movimentacao[]
 }

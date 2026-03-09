@@ -4,7 +4,9 @@ import prisma from '@/lib/prisma';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { produtoId, quantidadeStr } = body; 
+    
+    // 👇 AGORA PEGAMOS O MÉDICO E A UBS AQUI 👇
+    const { produtoId, quantidadeStr, medicoId, ubsId } = body; 
     
     const quantidadeDesejada = Number(quantidadeStr);
     const idDoProduto = Number(produtoId); 
@@ -61,17 +63,21 @@ export async function POST(request: Request) {
       }
     }
 
-    // 👇 A NOVIDADE AQUI! Anotando no Histórico 👇
+    // 👇 O HISTÓRICO AGORA SALVA TUDO! 👇
     operacoesNoBanco.push(
       prisma.movimentacao.create({
         data: {
           tipo: 'SAIDA',
           quantidade: quantidadeDesejada,
-          produtoId: idDoProduto
+          produtoId: idDoProduto,
+          // Converte para número e salva (se não tiver, salva como null)
+          medicoId: medicoId ? Number(medicoId) : null,
+          ubsId: ubsId ? Number(ubsId) : null
         }
       })
     );
 
+    // Executa tudo de uma vez com segurança
     await prisma.$transaction(operacoesNoBanco);
 
     return NextResponse.json(

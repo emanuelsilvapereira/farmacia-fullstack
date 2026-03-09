@@ -13,20 +13,28 @@ import {
   PlusCircle,
   ArrowRight,
   TrendingDown,
-  Users
+  Users,
+  Building,
+  Stethoscope
 } from "lucide-react";
 
 export default async function DashboardHome() {
-  // 0. Buscando a sessão para validar o Nível de Acesso
+  // 1. Pegamos a sessão do usuário logado
   const session: any = await getServerSession(authOptions);
-  const isAdmin = session?.user?.role === "ADMIN";
 
-  // 1. Buscando todos os produtos e lotes para fazer os cálculos
+  // 2. Definimos as permissões baseadas no perfil (Role)
+  // Se não tiver role definido, tratamos como o nível mais básico (FUNCIONARIO)
+  const userRole = session?.user?.role || "FUNCIONARIO";
+
+  const isGerente = userRole === "GERENTE" || userRole === "ADMIN";
+  const isFarmaceutico = userRole === "FARMACEUTICO" || isGerente; // Gerente herda as permissões de Farmacêutico
+  const isAdmin = userRole === "ADMIN";
+
+  // Buscas no banco de dados para os cards do topo
   const produtos = await prisma.produto.findMany({
     include: { lotes: true }
   });
 
-  // 2. Calculando as métricas do Dashboard
   const totalProdutosCadastrados = produtos.length;
 
   const totalItensNoEstoque = produtos.reduce((accTotal, produto) => {
@@ -43,28 +51,31 @@ export default async function DashboardHome() {
     const total = p.lotes.reduce((acc, lote) => acc + lote.quantidade, 0);
     return { nome: p.nome, total };
   });
+  
 
-  // 3. Preparando os dados para o gráfico (Top 6)
   const top6Produtos = produtosComEstoque
     .sort((a, b) => b.total - a.total)
     .slice(0, 6);
 
-  const maiorValor = top6Produtos.length > 0 ? top6Produtos[0].total : 1;
+  // 👇 LÓGICA DO GRÁFICO ATUALIZADA 👇
+  const dadosParaGrafico = top6Produtos.map(p => {
+    // Definimos 100 como um "estoque ideal" de referência para o gráfico ter escala.
+    const valorReferencia = 100;
+    const calculoPercentual = Math.min(Math.round((p.total / valorReferencia) * 100), 100);
 
-  const dadosParaGrafico = top6Produtos.map(p => ({
-    label: p.nome.substring(0, 12),
-    valor: p.total,
-    percentual: Math.round((p.total / maiorValor) * 100)
-  }));
+    return {
+      label: p.nome.substring(0, 12),
+      valor: p.total,
+      percentual: calculoPercentual === 0 && p.total > 0 ? 5 : calculoPercentual // Garante um "tiquinho" de barra se > 0
+    };
+  });
 
   const cardStyle = "bg-white dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm flex flex-col justify-between";
 
   return (
     <div className="min-h-screen p-6 md:p-8 lg:p-12 max-w-7xl mx-auto">
-      {/* 👇 Componente invisível que atualiza os dados quando você volta para esta aba */}
       <RefreshEvents />
 
-      {/* Cabeçalho */}
       <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -81,10 +92,7 @@ export default async function DashboardHome() {
         </div>
       </header>
 
-      {/* Cards de Métricas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-
-        {/* Card 1: Produtos Cadastrados */}
         <div className={cardStyle}>
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
@@ -97,12 +105,9 @@ export default async function DashboardHome() {
           </div>
         </div>
 
-        {/* Card 2: Total de Itens Físicos (Com Gráfico Animado ao clicar) */}
         <CardTotalItens total={totalItensNoEstoque} dadosGrafico={dadosParaGrafico} />
 
-        {/* Card 3: Alertas de Estoque */}
-        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col justify-between ${
-          produtosAlerta.length > 0
+        <div className={`p-6 rounded-2xl border shadow-sm flex flex-col justify-between ${produtosAlerta.length > 0
             ? 'bg-red-50 border-red-200 dark:bg-red-500/10 dark:border-red-500/20'
             : 'bg-white border-slate-200 dark:bg-slate-800/50 dark:border-slate-700/50'
           }`}>
@@ -120,34 +125,25 @@ export default async function DashboardHome() {
             </p>
           </div>
         </div>
-
       </div>
 
-      {/* Ações Rápidas */}
+      {/* AÇÕES RÁPIDAS COM BLOQUEIOS DE ACESSO */}
       <div>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6">Ações Rápidas</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
+          {/* 1. TODOS VEEM: Ver Estoque */}
           <Link href="/estoque" className="group p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm hover:shadow-md flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 dark:group-hover:bg-blue-500/10 dark:group-hover:text-blue-400 transition-colors">
                 <Package className="w-6 h-6" />
               </div>
-              <span className="font-semibold text-slate-900 dark:text-white">Ver Estoque Completo</span>
+              <span className="font-semibold text-slate-900 dark:text-white">Ver Estoque</span>
             </div>
             <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors group-hover:translate-x-1" />
           </Link>
 
-          <Link href="/estoque/novo" className="group p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all shadow-sm hover:shadow-md flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 dark:group-hover:bg-emerald-500/10 dark:group-hover:text-emerald-400 transition-colors">
-                <PlusCircle className="w-6 h-6" />
-              </div>
-              <span className="font-semibold text-slate-900 dark:text-white">Entrada de Produto</span>
-            </div>
-            <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors group-hover:translate-x-1" />
-          </Link>
-
+          {/* 2. TODOS VEEM: Registrar Saída (Frente de Caixa) */}
           <Link href="/estoque/saida" className="group p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-amber-500 dark:hover:border-amber-500 transition-all shadow-sm hover:shadow-md flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-amber-50 group-hover:text-amber-600 dark:group-hover:bg-amber-500/10 dark:group-hover:text-amber-400 transition-colors">
@@ -158,7 +154,45 @@ export default async function DashboardHome() {
             <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-500 transition-colors group-hover:translate-x-1" />
           </Link>
 
-          {/* Botão Condicional para o ADMIN */}
+          {/* 3. SÓ FARMACÊUTICO E GERENTE VEEM: Entrada de Produto */}
+          {isFarmaceutico && (
+            <Link href="/estoque/novo" className="group p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-emerald-500 dark:hover:border-emerald-500 transition-all shadow-sm hover:shadow-md flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 dark:group-hover:bg-emerald-500/10 dark:group-hover:text-emerald-400 transition-colors">
+                  <PlusCircle className="w-6 h-6" />
+                </div>
+                <span className="font-semibold text-slate-900 dark:text-white">Entrada de Produto</span>
+              </div>
+              <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-500 transition-colors group-hover:translate-x-1" />
+            </Link>
+          )}
+
+          {/* 4. SÓ GERENTE (OU ADMIN) VEEM: Cadastros Base */}
+          {isGerente && (
+            <>
+              <Link href="/ubs/novo" className="group p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all shadow-sm hover:shadow-md flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 dark:group-hover:bg-indigo-500/10 dark:group-hover:text-indigo-400 transition-colors">
+                    <Building className="w-6 h-6" />
+                  </div>
+                  <span className="font-semibold text-slate-900 dark:text-white">Cadastrar UBS</span>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors group-hover:translate-x-1" />
+              </Link>
+
+              <Link href="/medicos/novo" className="group p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-pink-500 dark:hover:border-pink-500 transition-all shadow-sm hover:shadow-md flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-pink-50 group-hover:text-pink-600 dark:group-hover:bg-pink-500/10 dark:group-hover:text-pink-400 transition-colors">
+                    <Stethoscope className="w-6 h-6" />
+                  </div>
+                  <span className="font-semibold text-slate-900 dark:text-white">Cadastrar Médico</span>
+                </div>
+                <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-pink-500 transition-colors group-hover:translate-x-1" />
+              </Link>
+            </>
+          )}
+
+          {/* 👇 5. AQUI É A MÁGICA: SÓ ADMIN VÊ A EQUIPE 👇 */}
           {isAdmin && (
             <Link href="/usuarios" className="group p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-purple-500 dark:hover:border-purple-500 transition-all shadow-sm hover:shadow-md flex items-center justify-between">
               <div className="flex items-center gap-4">

@@ -4,14 +4,16 @@ import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function BotaoDeletar({ id, nomeProduto }: { id: string | number; nomeProduto?: string }) {
+// 👇 Ajustei aqui de 'nomeProduto' para 'nome'
+export function BotaoDeletar({ id, nome }: { id: string | number; nome?: string }) {
   const router = useRouter();
   const [deletando, setDeletando] = useState(false);
 
   const handleDelete = async () => {
     // 1. Confirmação de segurança para evitar cliques acidentais
+    // 👇 E ajustei aqui também para usar a variável 'nome'
     const confirmacao = window.confirm(
-      `Tem certeza que deseja excluir ${nomeProduto ? `o remédio "${nomeProduto}"` : 'este item'}? \nEssa ação não pode ser desfeita.`
+      `Tem certeza que deseja excluir ${nome ? `o remédio "${nome}"` : 'este item'}? \nEssa ação não pode ser desfeita.`
     );
     
     if (!confirmacao) return;
