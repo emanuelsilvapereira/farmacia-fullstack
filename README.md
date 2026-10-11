@@ -13,9 +13,9 @@ Um sistema Full Stack para gestão de estoque de medicamentos, focado em control
 - **Interface Moderna:** Design responsivo com suporte nativo a **Dark Mode** e feedback visual de ações.
 
 ## 🚀 Tecnologias Utilizadas
-- **Front-end:** Next.js 15 (App Router), React, Tailwind CSS, Lucide Icons.
+- **Front-end:** Next.js 16 (App Router), React, Tailwind CSS, Lucide Icons.
 - **Back-end:** Node.js (Rotas de API do Next.js).
-- **Banco de Dados:** MySQL com ORM **Prisma**.
+- **Banco de Dados:** PostgreSQL com ORM **Prisma**.
 - **Segurança:** NextAuth.js com criptografia `bcrypt`.
 
 ---
@@ -24,8 +24,8 @@ Um sistema Full Stack para gestão de estoque de medicamentos, focado em control
 
 ### 1. Pré-requisitos
 Certifique-se de ter instalado em sua máquina:
-- [Node.js](https://nodejs.org/) (Versão 18 ou superior)
-- [MySQL](https://www.mysql.com/) (Rodando localmente na porta 3306)
+- [Node.js](https://nodejs.org/) (Versão 20.9 ou superior)
+- [PostgreSQL](https://www.postgresql.org/) (Rodando localmente na porta 5432)
 - Git
 
 ### 2. Instalação Rápida (Terminal)
@@ -43,15 +43,15 @@ npm install
 ```
 
 ### 3. Configuração do Banco de Dados
-Crie um arquivo chamado `.env` na raiz do projeto e cole o código abaixo. Lembre-se de ajustar `root` e `suasenha` de acordo com o seu MySQL local:
+Crie um arquivo chamado `.env` na raiz do projeto e configure a URL do seu PostgreSQL:
 
 ```env
-DATABASE_URL="mysql://root:suasenha@localhost:3306/estoque_farmacia"
+DATABASE_URL="postgresql://postgres:sua_senha@localhost:5432/estoque_farmacia?schema=public"
 NEXTAUTH_SECRET="c8b9f7a3e2d1c4b5a6f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
-Ainda no terminal, sincronize o Prisma para criar o banco de dados e as tabelas automaticamente:
+Crie o banco `estoque_farmacia` no PostgreSQL (por exemplo, com `CREATE DATABASE estoque_farmacia;`) e sincronize as tabelas do projeto:
 ```bash
 npx prisma db push
 ```
