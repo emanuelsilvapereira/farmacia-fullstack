@@ -77,17 +77,18 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 block">
-                E-mail de acesso
+                E-mail ou usuário
               </label>
               <div className="relative">
                 <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                 <input 
-                  type="email" 
+                  type="text"
                   name="email"
                   required 
+                  autoComplete="username"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="admin@sistema.com" 
+                  placeholder="admin.sistema ou admin@sistema.com"
                   className={inputStyle} 
                 />
               </div>

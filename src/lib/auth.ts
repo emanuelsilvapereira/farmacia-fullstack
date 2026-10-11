@@ -16,8 +16,13 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Dados incompletos");
         }
 
+        const identificador = credentials.email.trim().toLowerCase();
+        const email = identificador.endsWith(".sistema")
+          ? `${identificador.slice(0, -".sistema".length)}@sistema.com`
+          : identificador;
+
         const usuario = await (prisma as any).usuario.findUnique({
-          where: { email: credentials.email }
+          where: { email }
         });
 
         if (!usuario) throw new Error("Conta não encontrada");

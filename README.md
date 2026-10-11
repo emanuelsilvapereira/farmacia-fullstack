@@ -65,4 +65,4 @@ npm run dev
 **Passo final (Apenas na primeira vez que rodar o projeto):**
 1. Abra o navegador e acesse a rota semeadeira para gerar a equipe de testes: `http://localhost:3000/api/setup-equipe`
 2. Após ver a mensagem de sucesso na tela, acesse a raiz do sistema: `http://localhost:3000`
-3. Faça o login utilizando uma das contas criadas (ex: `admin@sistema.com` ou `gerente@sistema.com`) usando a senha padrão: **`123456`**.
+3. Faça o login utilizando uma das contas criadas (ex: `admin.sistema` ou `admin@sistema.com`) usando a senha padrão: **`123456`**. No ambiente online, confirme que a rota `/api/setup-equipe` foi executada para cadastrar as contas no banco de dados da implantação.
